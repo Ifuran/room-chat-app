@@ -19,7 +19,7 @@
       referrerpolicy="no-referrer"
     />
   </head>
-  <body>
+  <body class="bg-dark">
     <section>
       <div class="container py-5">
         <div class="row d-flex justify-content-center">
@@ -119,91 +119,112 @@
     <script>
       let myName = "";
       const socket = io();
+      socket.emit("join");
 
-      socket.on("yourName", ({ username, userOnline }) => {
+      socket.on("userOnline", ({ username, userOnline }) => {
         const userOnlineEl = document.getElementById("user-online");
         userOnlineEl.innerText = userOnline;
         myName = username;
         console.log("Namamu:", myName);
+        console.log(username, userOnline);
       });
 
-      // socket.on("userJoined", (msg) => {
-      //   const messageList = document.getElementById("message-list");
-      //   const notice = document.createElement("p");
-      //   notice.className = "text-muted text-center";
-      //   notice.textContent = msg;
-      //   messageList.appendChild(notice);
-      //   messageList.scrollTop = messageList.scrollHeight;
-      // });
+      socket.on("userJoined", (msg) => {
+        const messageList = document.getElementById("message-list");
+        const notice = document.createElement("p");
+        notice.className = "text-muted text-center";
+        notice.textContent = msg;
+        messageList.appendChild(notice);
+        messageList.scrollTop = messageList.scrollHeight;
+      });
 
-      // socket.on("message", ({ name, msg }) => {
-      //   console.log(`message from ${name} : ${msg}`);
-      //   const messageList = document.getElementById("message-list");
+      socket.on("message", ({ name, msg }) => {
+        console.log(`message from ${name} : ${msg}`);
+        const messageList = document.getElementById("message-list");
 
-      //   // Ambil waktu terkirim
-      //   const now = new Date();
-      //   const hours = now.getHours().toString().padStart(2, "0");
-      //   const minutes = now.getMinutes().toString().padStart(2, "0");
-      //   const timeSent = `${hours}:${minutes}`;
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, "0");
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const timeSent = `${hours}:${minutes}`;
 
-      //   // Buat elemen utama (wrapper)
-      //   const wrapper = document.createElement("div");
-      //   wrapper.className = "d-flex flex-row justify-content-start mb-4";
+        // Buat wrapper
+        const wrapper = document.createElement("div");
+        const avatar = document.createElement("img");
+        const contentContainer = document.createElement("div");
 
-      //   // Gambar avatar
-      //   const avatar = document.createElement("img");
-      //   avatar.src = "https://avatar.iran.liara.run/public/22";
-      //   avatar.alt = "avatar";
-      //   avatar.style.width = "45px";
-      //   avatar.style.height = "100%";
+        const bubble = document.createElement("p");
+        const sender = document.createElement("p");
+        const time = document.createElement("p");
 
-      //   // Container untuk bubble dan waktu
-      //   const contentContainer = document.createElement("div");
+        avatar.alt = "avatar";
+        avatar.style.width = "45px";
+        avatar.style.height = "100%";
+        sender.textContent = name;
+        bubble.textContent = msg;
+        time.textContent = timeSent;
 
-      //   // Bubble chat
-      //   const bubble = document.createElement("p");
-      //   bubble.className = "small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary";
-      //   bubble.textContent = msg;
+        if (name === myName) {
+          // Chat kita (kanan)
+          wrapper.className = "d-flex flex-row justify-content-end mb-4";
+          avatar.src = "https://avatar.iran.liara.run/public/20"; // Avatar kita
 
-      //   // Waktu
-      //   const time = document.createElement("p");
-      //   time.className = "small ms-3 mb-3 rounded-3 text-muted";
-      //   time.textContent = timeSent;
+          sender.className =
+            "small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end";
+          bubble.className =
+            "small p-2 me-3 mb-1 text-white rounded-3 bg-primary";
+          time.className =
+            "small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end";
 
-      //   // Gabungkan elemen
-      //   contentContainer.appendChild(bubble);
-      //   contentContainer.appendChild(time);
-      //   wrapper.appendChild(avatar);
-      //   wrapper.appendChild(contentContainer);
-      //   messageList.appendChild(wrapper);
+          contentContainer.appendChild(sender);
+          contentContainer.appendChild(bubble);
+          contentContainer.appendChild(time);
 
-      //   // Scroll otomatis ke bawah
-      //   messageList.scrollTop = messageList.scrollHeight;
-      // });
+          wrapper.appendChild(contentContainer);
+          wrapper.appendChild(avatar);
+        } else {
+          // Chat orang lain (kiri)
+          wrapper.className = "d-flex flex-row justify-content-start mb-4";
+          avatar.src = "https://avatar.iran.liara.run/public/22"; // Avatar orang lain
 
-      // socket.on("userLeft", (msg) => {
-      //   const messageList = document.getElementById("message-list");
-      //   const notice = document.createElement("p");
-      //   notice.className = "text-muted text-center";
-      //   notice.textContent = msg;
-      //   messageList.appendChild(notice);
-      //   messageList.scrollTop = messageList.scrollHeight;
-      // });
+          sender.className = "small ms-3 mb-3 rounded-3 text-muted";
+          bubble.className = "small p-2 ms-3 mb-1 rounded-3 bg-body-tertiary";
+          time.className = "small ms-3 mb-3 rounded-3 text-muted";
 
-      // socket.on("updateUserOnline", (count) => {
-      //   document.getElementById("user-online").innerText = count;
-      // });
+          contentContainer.appendChild(sender);
+          contentContainer.appendChild(bubble);
+          contentContainer.appendChild(time);
 
-      // const form = document.getElementById("form");
-      // const input = document.getElementById("formInput");
+          wrapper.appendChild(avatar);
+          wrapper.appendChild(contentContainer);
+        }
 
-      // form.addEventListener("submit", (e) => {
-      //   e.preventDefault();
-      //   if (input.value) {
-      //     socket.emit("message", input.value);
-      //     input.value = "";
-      //   }
-      // });
+        messageList.appendChild(wrapper);
+        messageList.scrollTop = messageList.scrollHeight;
+      });
+
+      socket.on("userLeft", (msg) => {
+        const messageList = document.getElementById("message-list");
+        const notice = document.createElement("p");
+        notice.className = "text-muted text-center";
+        notice.textContent = msg;
+        messageList.appendChild(notice);
+        messageList.scrollTop = messageList.scrollHeight;
+      });
+
+      socket.on("updateUserOnline", (count) => {
+        document.getElementById("user-online").innerText = count;
+      });
+
+      const form = document.getElementById("form");
+      const input = document.getElementById("formInput");
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit("message", input.value);
+          input.value = "";
+        }
+      });
     </script>
     <script
       src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
